@@ -5,10 +5,14 @@ import { Navbar } from '../components/Navbar';
 import { SpendingCharts } from '../components/SpendingCharts';
 import { ExpenseList } from '../components/ExpenseList';
 import { ExpenseModal } from '../components/ExpenseModal';
+import { GroupsView } from '../components/GroupsView';
 import { PlusCircle, RefreshCw } from 'lucide-react';
 
 export const Dashboard = () => {
   const { user } = useAuth();
+  const [currentTab, setCurrentTab] = useState('personal'); // 'personal' or 'groups'
+
+  // Personal Expenses State
   const [expenses, setExpenses] = useState([]);
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(0);
@@ -71,8 +75,10 @@ export const Dashboard = () => {
 
   // Refetch when filters/pagination change
   useEffect(() => {
-    fetchExpenses();
-  }, [fetchExpenses]);
+    if (currentTab === 'personal') {
+      fetchExpenses();
+    }
+  }, [fetchExpenses, currentTab]);
 
   const handleEdit = (expense) => {
     setExpenseToEdit(expense);
@@ -102,111 +108,116 @@ export const Dashboard = () => {
       color: '#f8fafc',
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
     }}>
-      <Navbar />
+      <Navbar currentTab={currentTab} onTabChange={setCurrentTab} />
 
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-        {/* Top Action Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          marginBottom: '1.5rem'
-        }}>
-          <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-              Personal Expenses
-            </h1>
-            <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '0.9rem' }}>
-              Track daily spending, categorize transactions, and inspect financial metrics.
-            </p>
-          </div>
+      <main style={{ maxWidth: '1240px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+        {currentTab === 'groups' ? (
+          <GroupsView categories={categories} />
+        ) : (
+          <>
+            {/* Top Action Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              <div>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
+                  Personal Expenses
+                </h1>
+                <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '0.9rem' }}>
+                  Track daily spending, categorize transactions, and inspect financial metrics.
+                </p>
+              </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button
-              onClick={() => {
-                fetchSummary();
-                fetchExpenses();
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  onClick={() => {
+                    fetchSummary();
+                    fetchExpenses();
+                  }}
+                  title="Refresh Data"
+                  style={{
+                    background: '#1e293b',
+                    border: '1px solid #334155',
+                    color: '#94a3b8',
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <RefreshCw size={16} />
+                </button>
+
+                <button
+                  onClick={() => {
+                    setExpenseToEdit(null);
+                    setIsModalOpen(true);
+                  }}
+                  style={{
+                    background: '#6366f1',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.4)'
+                  }}
+                >
+                  <PlusCircle size={18} />
+                  Add Expense
+                </button>
+              </div>
+            </div>
+
+            {/* Analytics & Metrics */}
+            <SpendingCharts summary={summary} currency={user?.currency || 'USD'} />
+
+            {/* Expense Transactions Table */}
+            <ExpenseList
+              expenses={expenses}
+              total={total}
+              skip={skip}
+              limit={limit}
+              onPageChange={setSkip}
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onCategoryFilterChange={(val) => {
+                setSelectedCategory(val);
+                setSkip(0);
               }}
-              title="Refresh Data"
-              style={{
-                background: '#1e293b',
-                border: '1px solid #334155',
-                color: '#94a3b8',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
+              searchQuery={searchQuery}
+              onSearchChange={(val) => {
+                setSearchQuery(val);
+                setSkip(0);
               }}
-            >
-              <RefreshCw size={16} />
-            </button>
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              currency={user?.currency || 'USD'}
+            />
 
-            <button
-              onClick={() => {
-                setExpenseToEdit(null);
-                setIsModalOpen(true);
-              }}
-              style={{
-                background: '#6366f1',
-                color: '#ffffff',
-                border: 'none',
-                padding: '10px 18px',
-                borderRadius: '8px',
-                fontSize: '0.95rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.4)'
-              }}
-            >
-              <PlusCircle size={18} />
-              Add Expense
-            </button>
-          </div>
-        </div>
-
-        {/* Analytics & Metrics */}
-        <SpendingCharts summary={summary} currency={user?.currency || 'USD'} />
-
-        {/* Expense Transactions Table */}
-        <ExpenseList
-          expenses={expenses}
-          total={total}
-          skip={skip}
-          limit={limit}
-          onPageChange={setSkip}
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryFilterChange={(val) => {
-            setSelectedCategory(val);
-            setSkip(0);
-          }}
-          searchQuery={searchQuery}
-          onSearchChange={(val) => {
-            setSearchQuery(val);
-            setSkip(0);
-          }}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          currency={user?.currency || 'USD'}
-        />
-
-        {/* Add / Edit Expense Modal */}
-        <ExpenseModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSaved={handleSaved}
-          expenseToEdit={expenseToEdit}
-          categories={categories}
-        />
+            {/* Add / Edit Expense Modal */}
+            <ExpenseModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onSaved={handleSaved}
+              expenseToEdit={expenseToEdit}
+              categories={categories}
+            />
+          </>
+        )}
       </main>
     </div>
   );
 };
-
