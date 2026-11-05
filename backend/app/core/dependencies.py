@@ -8,9 +8,16 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.expense_repository import ExpenseRepository
+from app.repositories.group_repository import GroupRepository
+from app.repositories.group_expense_repository import GroupExpenseRepository
+from app.repositories.settlement_repository import SettlementRepository
+
 from app.services.auth_service import AuthService
 from app.services.category_service import CategoryService
 from app.services.expense_service import ExpenseService
+from app.services.group_service import GroupService
+from app.services.group_expense_service import GroupExpenseService
+from app.services.settlement_service import SettlementService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -26,6 +33,18 @@ def get_category_repository(db: Session = Depends(get_db)) -> CategoryRepository
 
 def get_expense_repository(db: Session = Depends(get_db)) -> ExpenseRepository:
     return ExpenseRepository(db)
+
+
+def get_group_repository(db: Session = Depends(get_db)) -> GroupRepository:
+    return GroupRepository(db)
+
+
+def get_group_expense_repository(db: Session = Depends(get_db)) -> GroupExpenseRepository:
+    return GroupExpenseRepository(db)
+
+
+def get_settlement_repository(db: Session = Depends(get_db)) -> SettlementRepository:
+    return SettlementRepository(db)
 
 
 # Services Dependency Providers
@@ -47,6 +66,29 @@ def get_expense_service(
     category_repo: CategoryRepository = Depends(get_category_repository)
 ) -> ExpenseService:
     return ExpenseService(expense_repo, category_repo)
+
+
+def get_group_service(
+    group_repo: GroupRepository = Depends(get_group_repository),
+    user_repo: UserRepository = Depends(get_user_repository)
+) -> GroupService:
+    return GroupService(group_repo, user_repo)
+
+
+def get_group_expense_service(
+    group_repo: GroupRepository = Depends(get_group_repository),
+    group_expense_repo: GroupExpenseRepository = Depends(get_group_expense_repository),
+    category_repo: CategoryRepository = Depends(get_category_repository)
+) -> GroupExpenseService:
+    return GroupExpenseService(group_repo, group_expense_repo, category_repo)
+
+
+def get_settlement_service(
+    group_repo: GroupRepository = Depends(get_group_repository),
+    group_expense_repo: GroupExpenseRepository = Depends(get_group_expense_repository),
+    settlement_repo: SettlementRepository = Depends(get_settlement_repository)
+) -> SettlementService:
+    return SettlementService(group_repo, group_expense_repo, settlement_repo)
 
 
 # Security / Authentication Guard
@@ -82,4 +124,3 @@ def get_current_user(
         raise credentials_exception
 
     return user
-

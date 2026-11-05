@@ -8,6 +8,21 @@ from app.schemas.expense import (
     CategorySpendingSummary
 )
 from app.schemas.token import Token, TokenPayload
+from app.schemas.group import GroupCreate, GroupResponse, GroupMemberAdd, GroupMemberResponse
+from app.schemas.group_expense import (
+    SplitType,
+    ExpenseSplitInput,
+    ExpenseSplitResponse,
+    GroupExpenseCreate,
+    GroupExpenseResponse
+)
+from app.schemas.settlement import (
+    SettlementCreate,
+    SettlementResponse,
+    DebtItem,
+    MemberBalance,
+    GroupBalancesResponse
+)
 
 __all__ = [
     "UserCreate",
@@ -22,6 +37,19 @@ __all__ = [
     "ExpenseSummaryResponse",
     "CategorySpendingSummary",
     "Token",
-    "TokenPayload"
+    "TokenPayload",
+    "GroupCreate",
+    "GroupResponse",
+    "GroupMemberAdd",
+    "GroupMemberResponse",
+    "SplitType",
+    "ExpenseSplitInput",
+    "ExpenseSplitResponse",
+    "GroupExpenseCreate",
+    "GroupExpenseResponse",
+    "SettlementCreate",
+    "SettlementResponse",
+    "DebtItem",
+    "MemberBalance",
+    "GroupBalancesResponse"
 ]
-

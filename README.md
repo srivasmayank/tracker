@@ -7,10 +7,10 @@ An enterprise-grade expense management and shared debt settlement platform built
 ## Architecture & Engineering Highlights
 
 * **Architecture Pattern:** Clean Layered Architecture (Routers -> Services -> Repositories -> Models).
-* **SOLID Principles:** Strict enforcement of SRP, OCP, LSP, ISP, and DIP via Python type hints and dependency injection.
-* **ACID Guarantees:** Transactional integrity with MySQL InnoDB (Atomicity, Consistency, Isolation, Durability).
-* **Decoupled Data Access:** Generic Repository pattern separating database operations from business invariants.
-* **Modern React SPA:** JWT-based stateless authentication, dynamic category progress charts, paginated transactions, and instant CRUD.
+* **Strategy Pattern for Splitting:** Equal, Exact, Percentage, and Proportional Shares split engines adhering to Open/Closed Principle (OCP).
+* **Greedy Graph Debt Simplification:** Bipartite matching algorithm utilizing Min-Max heaps to reduce $O(N^2)$ pairwise debts to at most $N-1$ optimal repayment transactions.
+* **ACID Transactions:** Multi-record atomicity ensuring header and participant split rows commit or rollback together.
+* **Modern React SPA:** JWT-based stateless authentication, dynamic category progress charts, Splitwise Groups view, member invitation, interactive debt simplification, and Settle-Up modal.
 
 ---
 
@@ -19,24 +19,25 @@ An enterprise-grade expense management and shared debt settlement platform built
 ```text
 tracer/
 ├── docs/
-│   └── PHASE_1_DESIGN_AND_EXPLANATION.md   # Complete HLD & LLD Masterclass Guide
+│   ├── PHASE_1_DESIGN_AND_EXPLANATION.md   # Foundation & Personal CRUD Architecture
+│   └── PHASE_2_DESIGN_AND_EXPLANATION.md   # Splitwise Engine, Strategy Pattern & Debt Simplification
 ├── backend/
 │   ├── app/
 │   │   ├── core/                           # Config, Security, DB, Dependencies
-│   │   ├── models/                         # SQLAlchemy 2.0 ORM Entities
-│   │   ├── schemas/                        # Pydantic v2 DTOs & Validation
-│   │   ├── repositories/                   # Data Access Layer (SOLID: DIP & SRP)
-│   │   ├── services/                       # Business Logic Layer
-│   │   ├── api/v1/                         # Presentation Layer (FastAPI Routers)
+│   │   ├── models/                         # SQLAlchemy 2.0 Entities (User, Category, Expense, Group, GroupMember, GroupExpense, ExpenseSplit, Settlement)
+│   │   ├── schemas/                        # Pydantic v2 DTOs (Group, GroupExpense, Settlement, Token, User, Category)
+│   │   ├── repositories/                   # Data Access Layer (GroupRepo, GroupExpenseRepo, SettlementRepo, etc.)
+│   │   ├── services/                       # Business Logic (SplitStrategyFactory, DebtSimplifier, GroupExpenseService, SettlementService)
+│   │   ├── api/v1/                         # FastAPI Routers (auth, categories, expenses, groups)
 │   │   └── main.py                         # Application Entrypoint & CORS
-│   ├── tests/                              # Automated Pytest Suite (100% Pass)
+│   ├── tests/                              # Automated Pytest Suite (14/14 tests passing)
 │   ├── requirements.txt
 │   └── .env
 └── frontend/
     ├── src/
     │   ├── api/                            # Axios client with JWT Interceptors
     │   ├── context/                        # AuthContext (Login / Register / State)
-    │   ├── components/                     # Navbar, SpendingCharts, ExpenseList, Modal
+    │   ├── components/                     # Navbar, SpendingCharts, ExpenseList, ExpenseModal, GroupsView, GroupDetailView, GroupExpenseModal, SettleUpModal, AddMemberModal
     │   ├── pages/                          # AuthPage, Dashboard
     │   └── App.jsx
     ├── package.json
@@ -50,14 +51,11 @@ tracer/
 ### 1. Run the Backend
 
 ```powershell
-# In project root:
-.\venv\Scripts\activate
-
 # Navigate to backend:
 cd backend
 
 # Start the FastAPI server:
-uvicorn app.main:app --reload --port 8000
+..\venv\Scripts\uvicorn app.main:app --reload --port 8000
 ```
 
 * **Interactive API Documentation (Swagger):** [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
@@ -79,4 +77,3 @@ npm run dev
 $env:PYTHONPATH="c:\Users\PC\Downloads\tracer\backend"
 .\venv\Scripts\pytest backend\tests -v
 ```
-
