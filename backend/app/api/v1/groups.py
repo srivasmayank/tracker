@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import APIRouter, Depends, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Header, status
 from app.models.user import User
 from app.schemas.group import GroupCreate, GroupResponse, GroupMemberAdd, GroupMemberResponse
 from app.schemas.group_expense import GroupExpenseCreate, GroupExpenseResponse
@@ -65,17 +65,20 @@ def add_group_member(
 def create_group_expense(
     group_id: int,
     expense_in: GroupExpenseCreate,
+    x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
     current_user: User = Depends(get_current_user),
     group_expense_service: GroupExpenseService = Depends(get_group_expense_service)
 ):
     """
     Record a shared group expense with dynamic splitting strategy (EQUAL, EXACT, PERCENTAGE, SHARES).
     Atomically writes header and individual participant splits in one ACID transaction.
+    Guarded by X-Idempotency-Key against duplicate network retries.
     """
     return group_expense_service.create_group_expense(
         group_id=group_id,
         requester_id=current_user.id,
-        data=expense_in
+        data=expense_in,
+        idempotency_key=x_idempotency_key
     )
 
 
@@ -106,17 +109,22 @@ def get_group_balances(
 def record_settlement(
     group_id: int,
     settlement_in: SettlementCreate,
+    x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
     current_user: User = Depends(get_current_user),
     settlement_service: SettlementService = Depends(get_settlement_service)
 ):
     """
     Record a direct repayment from the authenticated user to a fellow creditor.
     Immediately updates the net debt balance.
+    Guarded by:
+    1. X-Idempotency-Key (Replays response upon duplicate network retry).
+    2. Pessimistic row lock (SELECT ... FOR UPDATE) preventing concurrent double settlements.
     """
     return settlement_service.record_settlement(
         group_id=group_id,
         payer_id=current_user.id,
-        data=settlement_in
+        data=settlement_in,
+        idempotency_key=x_idempotency_key
     )
 
 

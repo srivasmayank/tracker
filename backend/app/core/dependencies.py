@@ -11,6 +11,7 @@ from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.group_repository import GroupRepository
 from app.repositories.group_expense_repository import GroupExpenseRepository
 from app.repositories.settlement_repository import SettlementRepository
+from app.repositories.idempotency_repository import IdempotencyRepository
 
 from app.services.auth_service import AuthService
 from app.services.category_service import CategoryService
@@ -18,6 +19,7 @@ from app.services.expense_service import ExpenseService
 from app.services.group_service import GroupService
 from app.services.group_expense_service import GroupExpenseService
 from app.services.settlement_service import SettlementService
+from app.services.idempotency_service import IdempotencyService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -47,7 +49,17 @@ def get_settlement_repository(db: Session = Depends(get_db)) -> SettlementReposi
     return SettlementRepository(db)
 
 
+def get_idempotency_repository(db: Session = Depends(get_db)) -> IdempotencyRepository:
+    return IdempotencyRepository(db)
+
+
 # Services Dependency Providers
+def get_idempotency_service(
+    idempotency_repo: IdempotencyRepository = Depends(get_idempotency_repository)
+) -> IdempotencyService:
+    return IdempotencyService(idempotency_repo)
+
+
 def get_auth_service(
     user_repo: UserRepository = Depends(get_user_repository),
     category_repo: CategoryRepository = Depends(get_category_repository)
@@ -78,17 +90,19 @@ def get_group_service(
 def get_group_expense_service(
     group_repo: GroupRepository = Depends(get_group_repository),
     group_expense_repo: GroupExpenseRepository = Depends(get_group_expense_repository),
-    category_repo: CategoryRepository = Depends(get_category_repository)
+    category_repo: CategoryRepository = Depends(get_category_repository),
+    idempotency_service: IdempotencyService = Depends(get_idempotency_service)
 ) -> GroupExpenseService:
-    return GroupExpenseService(group_repo, group_expense_repo, category_repo)
+    return GroupExpenseService(group_repo, group_expense_repo, category_repo, idempotency_service)
 
 
 def get_settlement_service(
     group_repo: GroupRepository = Depends(get_group_repository),
     group_expense_repo: GroupExpenseRepository = Depends(get_group_expense_repository),
-    settlement_repo: SettlementRepository = Depends(get_settlement_repository)
+    settlement_repo: SettlementRepository = Depends(get_settlement_repository),
+    idempotency_service: IdempotencyService = Depends(get_idempotency_service)
 ) -> SettlementService:
-    return SettlementService(group_repo, group_expense_repo, settlement_repo)
+    return SettlementService(group_repo, group_expense_repo, settlement_repo, idempotency_service)
 
 
 # Security / Authentication Guard
@@ -96,10 +110,6 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     user_repo: UserRepository = Depends(get_user_repository)
 ) -> User:
-    """
-    Decodes the Bearer JWT token, validates claims, and injects the authenticated User instance.
-    Guards endpoints against unauthenticated access.
-    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials.",

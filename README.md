@@ -9,6 +9,9 @@ An enterprise-grade expense management and shared debt settlement platform built
 * **Architecture Pattern:** Clean Layered Architecture (Routers -> Services -> Repositories -> Models).
 * **Strategy Pattern for Splitting:** Equal, Exact, Percentage, and Proportional Shares split engines adhering to Open/Closed Principle (OCP).
 * **Greedy Graph Debt Simplification:** Bipartite matching algorithm utilizing Min-Max heaps to reduce $O(N^2)$ pairwise debts to at most $N-1$ optimal repayment transactions.
+* **Idempotency Gate (IETF Standard):** Transparent `X-Idempotency-Key` interceptor with SHA-256 request fingerprinting, atomic `PROCESSING` state locks, and response replay preventing duplicate charges during network retries.
+* **Pessimistic Row-Level Locking:** `SELECT ... FOR UPDATE` row locks in MySQL InnoDB guaranteeing transaction serializability and preventing concurrent over-settlements.
+* **Optimistic Concurrency Control (OCC):** Aggregate versioning counter checks preventing lost updates under parallel writes.
 * **ACID Transactions:** Multi-record atomicity ensuring header and participant split rows commit or rollback together.
 * **Modern React SPA:** JWT-based stateless authentication, dynamic category progress charts, Splitwise Groups view, member invitation, interactive debt simplification, and Settle-Up modal.
 
@@ -20,22 +23,23 @@ An enterprise-grade expense management and shared debt settlement platform built
 tracer/
 ├── docs/
 │   ├── PHASE_1_DESIGN_AND_EXPLANATION.md   # Foundation & Personal CRUD Architecture
-│   └── PHASE_2_DESIGN_AND_EXPLANATION.md   # Splitwise Engine, Strategy Pattern & Debt Simplification
+│   ├── PHASE_2_DESIGN_AND_EXPLANATION.md   # Splitwise Engine, Strategy Pattern & Debt Simplification
+│   └── PHASE_3_DESIGN_AND_EXPLANATION.md   # Race Conditions, Locking, Idempotency & ACID
 ├── backend/
 │   ├── app/
 │   │   ├── core/                           # Config, Security, DB, Dependencies
-│   │   ├── models/                         # SQLAlchemy 2.0 Entities (User, Category, Expense, Group, GroupMember, GroupExpense, ExpenseSplit, Settlement)
+│   │   ├── models/                         # SQLAlchemy 2.0 Entities (User, Category, Expense, Group, GroupMember, GroupExpense, ExpenseSplit, Settlement, IdempotencyRecord)
 │   │   ├── schemas/                        # Pydantic v2 DTOs (Group, GroupExpense, Settlement, Token, User, Category)
-│   │   ├── repositories/                   # Data Access Layer (GroupRepo, GroupExpenseRepo, SettlementRepo, etc.)
-│   │   ├── services/                       # Business Logic (SplitStrategyFactory, DebtSimplifier, GroupExpenseService, SettlementService)
+│   │   ├── repositories/                   # Data Access Layer (GroupRepo with FOR UPDATE, IdempotencyRepo, etc.)
+│   │   ├── services/                       # Business Logic (IdempotencyService, SplitStrategyFactory, DebtSimplifier, SettlementService)
 │   │   ├── api/v1/                         # FastAPI Routers (auth, categories, expenses, groups)
 │   │   └── main.py                         # Application Entrypoint & CORS
-│   ├── tests/                              # Automated Pytest Suite (14/14 tests passing)
+│   ├── tests/                              # Automated Pytest Suite (18/18 tests passing)
 │   ├── requirements.txt
 │   └── .env
 └── frontend/
     ├── src/
-    │   ├── api/                            # Axios client with JWT Interceptors
+    │   ├── api/                            # Axios client with JWT & auto-generated X-Idempotency-Key
     │   ├── context/                        # AuthContext (Login / Register / State)
     │   ├── components/                     # Navbar, SpendingCharts, ExpenseList, ExpenseModal, GroupsView, GroupDetailView, GroupExpenseModal, SettleUpModal, AddMemberModal
     │   ├── pages/                          # AuthPage, Dashboard

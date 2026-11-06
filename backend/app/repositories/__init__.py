@@ -5,6 +5,7 @@ from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.group_repository import GroupRepository
 from app.repositories.group_expense_repository import GroupExpenseRepository
 from app.repositories.settlement_repository import SettlementRepository
+from app.repositories.idempotency_repository import IdempotencyRepository
 
 __all__ = [
     "BaseRepository",
@@ -14,4 +15,5 @@ __all__ = [
     "GroupRepository",
     "GroupExpenseRepository",
     "SettlementRepository",
+    "IdempotencyRepository",
 ]

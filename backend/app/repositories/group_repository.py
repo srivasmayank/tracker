@@ -66,3 +66,25 @@ class GroupRepository(BaseRepository[Group]):
         )
         return [r[0] for r in rows]
 
+    def get_group_for_update(self, group_id: int) -> Optional[Group]:
+        """
+        Pessimistic Locking: Acquires an exclusive row-level lock (SELECT ... FOR UPDATE).
+        In MySQL InnoDB, any concurrent transaction attempting to read with FOR UPDATE
+        or modify this group row will block until this transaction commits or rolls back.
+        Guarantees serializability for debt settlements and balance updates.
+        """
+        return (
+            self.db.query(Group)
+            .filter(Group.id == group_id)
+            .with_for_update()
+            .first()
+        )
+
+    def increment_version_occ(self, group: Group) -> None:
+        """
+        Optimistic Concurrency Control (OCC): Increments the aggregate version counter.
+        """
+        group.version += 1
+        self.db.add(group)
+        self.db.commit()
+

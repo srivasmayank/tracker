@@ -9,13 +9,24 @@ export const apiClient = axios.create({
   },
 });
 
-// Request interceptor: Attach JWT Bearer token
+// Request interceptor: Attach JWT Bearer token & auto-generate Idempotency-Key on mutations
 apiClient.interceptors.request.use(
   (config) => {
+    // 1. Attach JWT Authorization token
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // 2. Attach X-Idempotency-Key on state-mutating requests (POST, PUT, DELETE)
+    // if not already specified explicitly by caller
+    const method = (config.method || '').toUpperCase();
+    if (['POST', 'PUT', 'DELETE'].includes(method) && !config.headers['X-Idempotency-Key']) {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        config.headers['X-Idempotency-Key'] = crypto.randomUUID();
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -26,7 +37,6 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear token if expired or invalid
       localStorage.removeItem('access_token');
       localStorage.removeItem('user_profile');
       if (window.location.pathname !== '/login') {
@@ -36,4 +46,3 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-

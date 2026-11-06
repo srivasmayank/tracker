@@ -14,6 +14,7 @@ class Group(Base):
     name = Column(String(100), nullable=False)
     description = Column(String(255), nullable=True)
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    version = Column(Integer, default=1, nullable=False)  # Optimistic Concurrency Control (OCC)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(
         DateTime(timezone=True),

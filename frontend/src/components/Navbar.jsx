@@ -47,7 +47,7 @@ export const Navbar = ({ currentTab, onTabChange }) => {
               textTransform: 'uppercase',
               fontWeight: '600'
             }}>
-              Phase 2: Splitwise
+              Phase 3: Concurrency & Locks
             </span>
           </div>
         </div>
