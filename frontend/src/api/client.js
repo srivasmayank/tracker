@@ -19,7 +19,6 @@ apiClient.interceptors.request.use(
     }
 
     // 2. Attach X-Idempotency-Key on state-mutating requests (POST, PUT, DELETE)
-    // if not already specified explicitly by caller
     const method = (config.method || '').toUpperCase();
     if (['POST', 'PUT', 'DELETE'].includes(method) && !config.headers['X-Idempotency-Key']) {
       if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -32,15 +31,22 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: Handle 401 Unauthorized
+// Response interceptor: Handle 401 Unauthorized & 429 Rate Limiting
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user_profile');
-      if (window.location.pathname !== '/login') {
-        window.dispatchEvent(new Event('auth_logout'));
+    if (error.response) {
+      const status = error.response.status;
+
+      if (status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user_profile');
+        if (window.location.pathname !== '/login') {
+          window.dispatchEvent(new Event('auth_logout'));
+        }
+      } else if (status === 429) {
+        const retryAfter = error.response.headers['retry-after'] || '60';
+        console.warn(`[RateLimit] Throttled by server. Retry-After: ${retryAfter}s`);
       }
     }
     return Promise.reject(error);

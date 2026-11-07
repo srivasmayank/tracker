@@ -3,19 +3,21 @@ from fastapi.testclient import TestClient
 
 
 def create_user_and_login(client: TestClient, email: str, name: str) -> dict:
-    """Helper to register and authenticate a user, returning auth headers."""
+    """Helper to register and authenticate a user, returning auth headers from their client IP."""
+    ip = f"10.0.{abs(hash(email)) % 240 + 1}.1"
+    ip_headers = {"X-Forwarded-For": ip}
     client.post("/api/v1/auth/register", json={
         "email": email,
         "full_name": name,
         "password": "Password123!",
         "currency": "USD"
-    })
+    }, headers=ip_headers)
     res = client.post("/api/v1/auth/login", json={
         "email": email,
         "password": "Password123!"
-    })
+    }, headers=ip_headers)
     token = res.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    return {"Authorization": f"Bearer {token}", "X-Forwarded-For": ip}
 
 
 def test_create_group_and_invite_members(client: TestClient):
