@@ -11,6 +11,7 @@ TEST_DB_FILE = Path("./test_expenses.db")
 SQLALCHEMY_TEST_DATABASE_URL = f"sqlite:///{TEST_DB_FILE.as_posix()}"
 
 from app.core.database import Base, get_db
+from app.core.rate_limiter import default_rate_limit_storage
 from app.main import app
 
 engine_test = create_engine(
@@ -32,6 +33,14 @@ def setup_test_db():
             TEST_DB_FILE.unlink()
         except Exception:
             pass
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limits():
+    """Clear rate limiting counters before and after each test."""
+    default_rate_limit_storage.clear()
+    yield
+    default_rate_limit_storage.clear()
 
 
 @pytest.fixture()

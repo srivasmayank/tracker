@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Database Configuration (MySQL 8.0 by default, fallback to SQLite if needed)
     DATABASE_URL: str = "mysql+pymysql://root:password@localhost:3306/expense_tracker"
     
+    # Rate Limiting
+    RATE_LIMITING_ENABLED: bool = True
+    
     # CORS Configuration
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",  # Vite React default port

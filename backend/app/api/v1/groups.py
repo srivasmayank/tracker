@@ -13,8 +13,13 @@ from app.core.dependencies import (
     get_settlement_service,
     get_current_user
 )
+from app.core.rate_limiter import RateLimiter
 
 router = APIRouter(prefix="/groups", tags=["Groups & Splitwise"])
+
+# Rate limiters for group operations
+balances_limiter = RateLimiter(limit=30, window_seconds=60, scope="group_balances")
+settle_limiter = RateLimiter(limit=15, window_seconds=60, scope="group_settle")
 
 
 @router.post("", response_model=GroupResponse, status_code=status.HTTP_201_CREATED)
@@ -92,7 +97,11 @@ def list_group_expenses(
     return group_expense_service.list_group_expenses(group_id=group_id, user_id=current_user.id)
 
 
-@router.get("/{group_id}/balances", response_model=GroupBalancesResponse)
+@router.get(
+    "/{group_id}/balances",
+    response_model=GroupBalancesResponse,
+    dependencies=[Depends(balances_limiter)]
+)
 def get_group_balances(
     group_id: int,
     current_user: User = Depends(get_current_user),
@@ -105,7 +114,12 @@ def get_group_balances(
     return settlement_service.get_group_balances(group_id=group_id, user_id=current_user.id)
 
 
-@router.post("/{group_id}/settle", response_model=SettlementResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{group_id}/settle",
+    response_model=SettlementResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(settle_limiter)]
+)
 def record_settlement(
     group_id: int,
     settlement_in: SettlementCreate,

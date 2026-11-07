@@ -1,6 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
@@ -49,6 +49,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def rate_limit_header_middleware(request: Request, call_next):
+    """Ensures rate-limiting headers are preserved even on HTTP errors/exceptions."""
+    response = await call_next(request)
+    if hasattr(request.state, "rate_limit_headers"):
+        for k, v in request.state.rate_limit_headers.items():
+            response.headers[k] = v
+    return response
 
 # Mount API Routers
 app.include_router(api_router, prefix=settings.API_V1_STR)
