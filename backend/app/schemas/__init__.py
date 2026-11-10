@@ -23,6 +23,20 @@ from app.schemas.settlement import (
     MemberBalance,
     GroupBalancesResponse
 )
+from app.schemas.recurring_expense import (
+    FrequencyEnum,
+    RecurringExpenseCreate,
+    RecurringExpenseUpdate,
+    RecurringExpenseResponse,
+    BatchProcessResult
+)
+from app.schemas.export_job import (
+    ExportFormatEnum,
+    ExportJobStatusEnum,
+    ExportJobCreate,
+    ExportJobResponse,
+    ExportStatusResponse
+)
 
 __all__ = [
     "UserCreate",
@@ -51,5 +65,15 @@ __all__ = [
     "SettlementResponse",
     "DebtItem",
     "MemberBalance",
-    "GroupBalancesResponse"
+    "GroupBalancesResponse",
+    "FrequencyEnum",
+    "RecurringExpenseCreate",
+    "RecurringExpenseUpdate",
+    "RecurringExpenseResponse",
+    "BatchProcessResult",
+    "ExportFormatEnum",
+    "ExportJobStatusEnum",
+    "ExportJobCreate",
+    "ExportJobResponse",
+    "ExportStatusResponse",
 ]
