@@ -11,6 +11,7 @@ TEST_DB_FILE = Path("./test_expenses.db")
 SQLALCHEMY_TEST_DATABASE_URL = f"sqlite:///{TEST_DB_FILE.as_posix()}"
 
 from app.core.database import Base, get_db
+import app.core.database as core_db
 from app.core.rate_limiter import default_rate_limit_storage
 from app.main import app
 
@@ -19,6 +20,7 @@ engine_test = create_engine(
     connect_args={"check_same_thread": False}
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine_test)
+core_db.SessionLocal = TestingSessionLocal
 
 
 @pytest.fixture(scope="session", autouse=True)
