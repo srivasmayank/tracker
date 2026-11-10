@@ -12,6 +12,8 @@ from app.repositories.group_repository import GroupRepository
 from app.repositories.group_expense_repository import GroupExpenseRepository
 from app.repositories.settlement_repository import SettlementRepository
 from app.repositories.idempotency_repository import IdempotencyRepository
+from app.repositories.recurring_expense_repository import RecurringExpenseRepository
+from app.repositories.export_job_repository import ExportJobRepository
 
 from app.services.auth_service import AuthService
 from app.services.category_service import CategoryService
@@ -20,6 +22,8 @@ from app.services.group_service import GroupService
 from app.services.group_expense_service import GroupExpenseService
 from app.services.settlement_service import SettlementService
 from app.services.idempotency_service import IdempotencyService
+from app.services.recurring_expense_service import RecurringExpenseService
+from app.services.export_service import ExportService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -51,6 +55,14 @@ def get_settlement_repository(db: Session = Depends(get_db)) -> SettlementReposi
 
 def get_idempotency_repository(db: Session = Depends(get_db)) -> IdempotencyRepository:
     return IdempotencyRepository(db)
+
+
+def get_recurring_expense_repository(db: Session = Depends(get_db)) -> RecurringExpenseRepository:
+    return RecurringExpenseRepository(db)
+
+
+def get_export_job_repository(db: Session = Depends(get_db)) -> ExportJobRepository:
+    return ExportJobRepository(db)
 
 
 # Services Dependency Providers
@@ -103,6 +115,22 @@ def get_settlement_service(
     idempotency_service: IdempotencyService = Depends(get_idempotency_service)
 ) -> SettlementService:
     return SettlementService(group_repo, group_expense_repo, settlement_repo, idempotency_service)
+
+
+def get_recurring_expense_service(
+    db: Session = Depends(get_db),
+    recurring_repo: RecurringExpenseRepository = Depends(get_recurring_expense_repository),
+    expense_repo: ExpenseRepository = Depends(get_expense_repository),
+    category_repo: CategoryRepository = Depends(get_category_repository)
+) -> RecurringExpenseService:
+    return RecurringExpenseService(db, recurring_repo, expense_repo, category_repo)
+
+
+def get_export_service(
+    db: Session = Depends(get_db),
+    job_repo: ExportJobRepository = Depends(get_export_job_repository)
+) -> ExportService:
+    return ExportService(db, job_repo)
 
 
 # Security / Authentication Guard

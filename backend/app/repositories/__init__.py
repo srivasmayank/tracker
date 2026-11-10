@@ -6,6 +6,8 @@ from app.repositories.group_repository import GroupRepository
 from app.repositories.group_expense_repository import GroupExpenseRepository
 from app.repositories.settlement_repository import SettlementRepository
 from app.repositories.idempotency_repository import IdempotencyRepository
+from app.repositories.recurring_expense_repository import RecurringExpenseRepository
+from app.repositories.export_job_repository import ExportJobRepository
 
 __all__ = [
     "BaseRepository",
@@ -16,4 +18,6 @@ __all__ = [
     "GroupExpenseRepository",
     "SettlementRepository",
     "IdempotencyRepository",
+    "RecurringExpenseRepository",
+    "ExportJobRepository",
 ]
