@@ -6,11 +6,13 @@ import { SpendingCharts } from '../components/SpendingCharts';
 import { ExpenseList } from '../components/ExpenseList';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { GroupsView } from '../components/GroupsView';
-import { PlusCircle, RefreshCw } from 'lucide-react';
+import { RecurringView } from '../components/RecurringView';
+import { ExportModal } from '../components/ExportModal';
+import { PlusCircle, RefreshCw, Download } from 'lucide-react';
 
 export const Dashboard = () => {
   const { user } = useAuth();
-  const [currentTab, setCurrentTab] = useState('personal'); // 'personal' or 'groups'
+  const [currentTab, setCurrentTab] = useState('personal'); // 'personal' | 'groups' | 'recurring'
 
   // Personal Expenses State
   const [expenses, setExpenses] = useState([]);
@@ -23,6 +25,7 @@ export const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -113,6 +116,8 @@ export const Dashboard = () => {
       <main style={{ maxWidth: '1240px', margin: '0 auto', padding: '2rem 1.5rem' }}>
         {currentTab === 'groups' ? (
           <GroupsView categories={categories} />
+        ) : currentTab === 'recurring' ? (
+          <RecurringView categories={categories} onExpenseCreated={fetchExpenses} />
         ) : (
           <>
             {/* Top Action Header */}
@@ -133,7 +138,7 @@ export const Dashboard = () => {
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => {
                     fetchSummary();
@@ -153,6 +158,26 @@ export const Dashboard = () => {
                   }}
                 >
                   <RefreshCw size={16} />
+                </button>
+
+                <button
+                  onClick={() => setIsExportModalOpen(true)}
+                  style={{
+                    background: '#1e293b',
+                    color: '#38bdf8',
+                    border: '1px solid #0284c7',
+                    padding: '10px 16px',
+                    borderRadius: '8px',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <Download size={18} />
+                  Export Statement
                 </button>
 
                 <button
@@ -214,6 +239,12 @@ export const Dashboard = () => {
               onSaved={handleSaved}
               expenseToEdit={expenseToEdit}
               categories={categories}
+            />
+
+            {/* Asynchronous Statement Export Modal */}
+            <ExportModal
+              isOpen={isExportModalOpen}
+              onClose={() => setIsExportModalOpen(false)}
             />
           </>
         )}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Wallet, LogOut, User as UserIcon, Users, UserCheck } from 'lucide-react';
+import { Wallet, LogOut, User as UserIcon, Users, UserCheck, Repeat } from 'lucide-react';
 
 export const Navbar = ({ currentTab, onTabChange }) => {
   const { user, logout } = useAuth();
@@ -40,14 +40,14 @@ export const Navbar = ({ currentTab, onTabChange }) => {
             <span style={{
               fontSize: '0.65rem',
               marginLeft: '8px',
-              background: '#312e81',
-              color: '#c7d2fe',
+              background: '#065f46',
+              color: '#6ee7b7',
               padding: '2px 6px',
               borderRadius: '4px',
               textTransform: 'uppercase',
               fontWeight: '600'
             }}>
-              Phase 4: Rate Limiting
+              Phase 5: Background Jobs
             </span>
           </div>
         </div>
@@ -94,6 +94,26 @@ export const Navbar = ({ currentTab, onTabChange }) => {
             >
               <Users size={16} />
               Splitwise Groups
+            </button>
+            <button
+              onClick={() => onTabChange('recurring')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                border: 'none',
+                background: currentTab === 'recurring' ? '#6366f1' : 'transparent',
+                color: currentTab === 'recurring' ? '#ffffff' : '#94a3b8',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              <Repeat size={16} />
+              Subscriptions
             </button>
           </nav>
         )}
