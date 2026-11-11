@@ -24,6 +24,7 @@ from app.services.settlement_service import SettlementService
 from app.services.idempotency_service import IdempotencyService
 from app.services.recurring_expense_service import RecurringExpenseService
 from app.services.export_service import ExportService
+from app.services.fx_service import FXService, default_fx_service
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -99,22 +100,28 @@ def get_group_service(
     return GroupService(group_repo, user_repo)
 
 
+def get_fx_service() -> FXService:
+    return default_fx_service
+
+
 def get_group_expense_service(
     group_repo: GroupRepository = Depends(get_group_repository),
     group_expense_repo: GroupExpenseRepository = Depends(get_group_expense_repository),
     category_repo: CategoryRepository = Depends(get_category_repository),
-    idempotency_service: IdempotencyService = Depends(get_idempotency_service)
+    idempotency_service: IdempotencyService = Depends(get_idempotency_service),
+    fx_service: FXService = Depends(get_fx_service)
 ) -> GroupExpenseService:
-    return GroupExpenseService(group_repo, group_expense_repo, category_repo, idempotency_service)
+    return GroupExpenseService(group_repo, group_expense_repo, category_repo, idempotency_service, fx_service)
 
 
 def get_settlement_service(
     group_repo: GroupRepository = Depends(get_group_repository),
     group_expense_repo: GroupExpenseRepository = Depends(get_group_expense_repository),
     settlement_repo: SettlementRepository = Depends(get_settlement_repository),
-    idempotency_service: IdempotencyService = Depends(get_idempotency_service)
+    idempotency_service: IdempotencyService = Depends(get_idempotency_service),
+    fx_service: FXService = Depends(get_fx_service)
 ) -> SettlementService:
-    return SettlementService(group_repo, group_expense_repo, settlement_repo, idempotency_service)
+    return SettlementService(group_repo, group_expense_repo, settlement_repo, idempotency_service, fx_service)
 
 
 def get_recurring_expense_service(

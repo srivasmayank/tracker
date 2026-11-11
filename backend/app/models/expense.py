@@ -15,6 +15,7 @@ class Expense(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="RESTRICT"), nullable=False, index=True)
     amount = Column(Numeric(12, 2), nullable=False)
+    currency = Column(String(3), default="USD", nullable=False)
     description = Column(String(255), nullable=False)
     expense_date = Column(Date, default=date.today, nullable=False, index=True)
     payment_method = Column(String(50), default="CASH", nullable=False)  # CASH, CARD, UPI, TRANSFER
