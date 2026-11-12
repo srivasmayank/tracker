@@ -21,6 +21,7 @@ class GroupService:
         group = Group(
             name=data.name.strip(),
             description=data.description.strip() if data.description else None,
+            currency=(data.currency or "USD").upper().strip(),
             created_by=creator_id
         )
         created_group = self.group_repo.create(group)

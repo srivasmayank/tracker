@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import List, Optional, Union, Dict, Any
 from fastapi import HTTPException, status
 from app.models.group_expense import GroupExpense
@@ -7,12 +8,13 @@ from app.repositories.group_expense_repository import GroupExpenseRepository
 from app.repositories.category_repository import CategoryRepository
 from app.services.split_strategies import SplitStrategyFactory
 from app.services.idempotency_service import IdempotencyService
+from app.services.fx_service import FXService, default_fx_service
 
 
 class GroupExpenseService:
     """
     Business logic layer orchestrating group expense splitting and persistence
-    with ACID concurrency and idempotency protections.
+    with ACID concurrency, multi-currency conversion, and idempotency protections.
     """
 
     def __init__(
@@ -20,12 +22,14 @@ class GroupExpenseService:
         group_repo: GroupRepository,
         group_expense_repo: GroupExpenseRepository,
         category_repo: CategoryRepository,
-        idempotency_service: IdempotencyService
+        idempotency_service: IdempotencyService,
+        fx_service: Optional[FXService] = None
     ):
         self.group_repo = group_repo
         self.group_expense_repo = group_expense_repo
         self.category_repo = category_repo
         self.idempotency_service = idempotency_service
+        self.fx_service = fx_service or default_fx_service
 
     def create_group_expense(
         self,
@@ -110,18 +114,31 @@ class GroupExpenseService:
                 split_inputs=split_inputs
             )
 
-            # 8. Instantiate GroupExpense model
+            # 8. Multi-Currency Normalization & Exchange Rate Freezing
+            group_base_curr = getattr(locked_group, "currency", "USD") or "USD"
+            expense_curr = (data.currency or group_base_curr).upper().strip()
+
+            if expense_curr != group_base_curr:
+                base_amt, rate = self.fx_service.convert(data.amount, expense_curr, group_base_curr)
+            else:
+                base_amt = data.amount
+                rate = Decimal("1.000000")
+
+            # 9. Instantiate GroupExpense model with frozen exchange rate
             expense = GroupExpense(
                 group_id=group_id,
                 paid_by_user_id=paid_by,
                 category_id=data.category_id,
                 amount=data.amount,
+                currency=expense_curr,
+                exchange_rate=rate,
+                base_amount=base_amt,
                 description=data.description.strip(),
                 split_type=data.split_type.value,
                 expense_date=data.expense_date
             )
 
-            # 9. Atomic persistence of header + all splits
+            # 10. Atomic persistence of header + all splits
             created_expense = self.group_expense_repo.create_atomic_group_expense(expense, calculated_splits)
 
             # 10. Increment OCC version

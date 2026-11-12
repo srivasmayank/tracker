@@ -8,6 +8,7 @@ from app.schemas.category import CategoryResponse
 class ExpenseBase(BaseModel):
     category_id: int
     amount: Decimal = Field(..., gt=0, decimal_places=2, description="Expense amount must be strictly greater than 0")
+    currency: str = Field(default="USD", min_length=3, max_length=3)
     description: str = Field(..., min_length=1, max_length=255)
     expense_date: date = Field(default_factory=date.today)
     payment_method: str = Field(default="CASH", pattern="^(CASH|CARD|UPI|TRANSFER|OTHER)$")
@@ -20,6 +21,7 @@ class ExpenseCreate(ExpenseBase):
 class ExpenseUpdate(BaseModel):
     category_id: Optional[int] = None
     amount: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
+    currency: Optional[str] = Field(None, min_length=3, max_length=3)
     description: Optional[str] = Field(None, min_length=1, max_length=255)
     expense_date: Optional[date] = None
     payment_method: Optional[str] = Field(None, pattern="^(CASH|CARD|UPI|TRANSFER|OTHER)$")

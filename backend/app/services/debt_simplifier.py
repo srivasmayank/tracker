@@ -1,16 +1,17 @@
 import heapq
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import List, Dict, Tuple
 from app.models.group_expense import GroupExpense
 from app.models.settlement import Settlement
 from app.models.user import User
-from app.schemas.settlement import DebtItem, MemberBalance, GroupBalancesResponse
+from app.schemas.settlement import DebtItem, MemberBalance
 
 
 class DebtSimplifier:
     """
     Core algorithmic engine for calculating member net balances and
     minimizing pairwise debts using a Greedy Bipartite Matching algorithm.
+    Enhanced in Phase 6 with multi-currency normalization to the group's base accounting currency.
     """
 
     @staticmethod
@@ -20,33 +21,56 @@ class DebtSimplifier:
         settlements: List[Settlement]
     ) -> Tuple[Dict[int, Decimal], List[MemberBalance], Decimal]:
         """
-        Calculates individual net balances for all group members:
+        Calculates individual net balances for all group members in Base Currency:
         Net = (Total Paid For Expenses - Total Owed In Splits) + (Settlements Paid - Settlements Received)
         """
-        user_map: Dict[int, User] = {m.id: m for m in members}
         total_paid: Dict[int, Decimal] = {m.id: Decimal("0.00") for m in members}
         total_owed: Dict[int, Decimal] = {m.id: Decimal("0.00") for m in members}
         total_group_spending = Decimal("0.00")
 
-        # 1. Tally Expenses & Splits
+        # 1. Tally Expenses & Splits normalized to base currency
         for exp in expenses:
-            total_group_spending += exp.amount
+            # Use base_amount if populated, otherwise fallback to amount (1:1)
+            base_amt = (
+                Decimal(str(exp.base_amount))
+                if getattr(exp, "base_amount", None) is not None
+                else Decimal(str(exp.amount))
+            )
+            total_group_spending += base_amt
+
             if exp.paid_by_user_id in total_paid:
-                total_paid[exp.paid_by_user_id] += exp.amount
+                total_paid[exp.paid_by_user_id] += base_amt
+
+            # Normalize split owed amounts using frozen exchange_rate
+            rate = (
+                Decimal(str(exp.exchange_rate))
+                if getattr(exp, "exchange_rate", None) is not None
+                else Decimal("1.000000")
+            )
 
             for split in exp.splits:
                 if split.user_id in total_owed:
-                    total_owed[split.user_id] += split.owed_amount
+                    split_owed = Decimal(str(split.owed_amount))
+                    if rate != Decimal("1.000000"):
+                        split_base = (split_owed * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    else:
+                        split_base = split_owed
+                    total_owed[split.user_id] += split_base
 
-        # 2. Tally Direct Settlements
+        # 2. Tally Direct Settlements normalized to base currency
         settlements_paid: Dict[int, Decimal] = {m.id: Decimal("0.00") for m in members}
         settlements_received: Dict[int, Decimal] = {m.id: Decimal("0.00") for m in members}
 
         for s in settlements:
+            s_base = (
+                Decimal(str(s.base_amount))
+                if getattr(s, "base_amount", None) is not None
+                else Decimal(str(s.amount))
+            )
             if s.payer_id in settlements_paid:
-                settlements_paid[s.payer_id] += s.amount
+                settlements_paid[s.payer_id] += s_base
             if s.payee_id in settlements_received:
-                settlements_received[s.payee_id] += s.amount
+                settlements_received[s.payee_id] += s_base
 
         # 3. Calculate Net Balances
         net_balances: Dict[int, Decimal] = {}
@@ -73,17 +97,16 @@ class DebtSimplifier:
     @staticmethod
     def simplify_debts(
         net_balances: Dict[int, Decimal],
-        members: List[User]
+        members: List[User],
+        currency: str = "USD"
     ) -> List[DebtItem]:
         """
         Greedy bipartite matching using two heaps (Min-Debtor and Max-Creditor).
-        Reduces O(N^2) pairwise debts to at most N-1 transactions.
+        Reduces O(N^2) pairwise debts to at most N-1 transactions in the group's base currency.
         """
         user_map = {m.id: m.full_name for m in members}
 
         # Max-heaps stored with negative values because Python heapq is a min-heap
-        # Creditors: positive net balance (stored as (-amount, user_id))
-        # Debtors: negative net balance (stored as (-abs(net), user_id))
         creditor_heap = []
         debtor_heap = []
 
@@ -112,7 +135,8 @@ class DebtSimplifier:
                     debtor_name=user_map.get(debtor_id, f"User {debtor_id}"),
                     creditor_id=creditor_id,
                     creditor_name=user_map.get(creditor_id, f"User {creditor_id}"),
-                    amount=settle_amount
+                    amount=settle_amount,
+                    currency=currency
                 )
             )
 
@@ -126,4 +150,3 @@ class DebtSimplifier:
                 heapq.heappush(creditor_heap, (-float(remaining_credit), creditor_id))
 
         return simplified_debts
-

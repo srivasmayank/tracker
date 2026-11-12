@@ -13,6 +13,7 @@ class Group(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(100), nullable=False)
     description = Column(String(255), nullable=True)
+    currency = Column(String(3), default="USD", nullable=False)
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     version = Column(Integer, default=1, nullable=False)  # Optimistic Concurrency Control (OCC)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)

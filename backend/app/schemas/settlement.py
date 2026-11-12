@@ -8,6 +8,7 @@ from app.schemas.user import UserResponse
 class SettlementCreate(BaseModel):
     payee_id: int = Field(..., description="User ID of member receiving the repayment")
     amount: Decimal = Field(..., gt=0, decimal_places=2, description="Settlement amount")
+    currency: Optional[str] = Field(default=None, min_length=3, max_length=3, description="Currency of settlement. Defaults to group base currency if omitted.")
     notes: Optional[str] = Field(None, max_length=255)
 
 
@@ -17,6 +18,9 @@ class SettlementResponse(BaseModel):
     payer_id: int
     payee_id: int
     amount: Decimal
+    currency: str = "USD"
+    exchange_rate: Decimal = Decimal("1.000000")
+    base_amount: Optional[Decimal] = None
     notes: Optional[str] = None
     settled_at: datetime
     payer: Optional[UserResponse] = None
@@ -32,6 +36,7 @@ class DebtItem(BaseModel):
     creditor_id: int
     creditor_name: str
     amount: Decimal
+    currency: str = "USD"
 
 
 class MemberBalance(BaseModel):
@@ -46,6 +51,7 @@ class MemberBalance(BaseModel):
 
 class GroupBalancesResponse(BaseModel):
     group_id: int
+    currency: str = "USD"
     total_spending: Decimal
     members: List[MemberBalance]
     simplified_debts: List[DebtItem]

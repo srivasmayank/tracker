@@ -17,6 +17,7 @@ class GroupMemberResponse(BaseModel):
 class GroupBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=255)
+    currency: str = Field(default="USD", min_length=3, max_length=3, description="Base accounting currency for the group")
 
 
 class GroupCreate(GroupBase):

@@ -15,6 +15,9 @@ class GroupExpense(Base):
     paid_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="RESTRICT"), nullable=False, index=True)
     amount = Column(Numeric(12, 2), nullable=False)
+    currency = Column(String(3), default="USD", nullable=False)
+    exchange_rate = Column(Numeric(14, 6), default=1.0, nullable=False)
+    base_amount = Column(Numeric(12, 2), nullable=True)
     description = Column(String(255), nullable=False)
     split_type = Column(String(20), default="EQUAL", nullable=False)  # EQUAL, EXACT, PERCENTAGE, SHARES
     expense_date = Column(Date, default=date.today, nullable=False, index=True)

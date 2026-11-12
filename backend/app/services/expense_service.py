@@ -38,6 +38,7 @@ class ExpenseService:
             user_id=user_id,
             category_id=data.category_id,
             amount=data.amount,
+            currency=(data.currency or "USD").upper().strip(),
             description=data.description.strip(),
             expense_date=data.expense_date,
             payment_method=data.payment_method
@@ -94,6 +95,8 @@ class ExpenseService:
 
         if data.amount is not None:
             expense.amount = data.amount
+        if data.currency is not None:
+            expense.currency = data.currency.upper().strip()
         if data.description is not None:
             expense.description = data.description.strip()
         if data.expense_date is not None:

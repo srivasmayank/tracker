@@ -35,6 +35,7 @@ class ExpenseSplitResponse(BaseModel):
 class GroupExpenseCreate(BaseModel):
     category_id: int
     amount: Decimal = Field(..., gt=0, decimal_places=2)
+    currency: Optional[str] = Field(default=None, min_length=3, max_length=3, description="Currency of this expense. Defaults to group base currency if omitted.")
     description: str = Field(..., min_length=1, max_length=255)
     split_type: SplitType = Field(default=SplitType.EQUAL)
     expense_date: date = Field(default_factory=date.today)
@@ -51,6 +52,9 @@ class GroupExpenseResponse(BaseModel):
     paid_by_user_id: int
     category_id: int
     amount: Decimal
+    currency: str = "USD"
+    exchange_rate: Decimal = Decimal("1.000000")
+    base_amount: Optional[Decimal] = None
     description: str
     split_type: SplitType
     expense_date: date
