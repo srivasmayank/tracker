@@ -7,12 +7,14 @@ export const GroupExpenseModal = ({
   isOpen,
   onClose,
   groupId,
+  groupCurrency = 'USD',
   members = [],
   categories = [],
   onSaved
 }) => {
   const { user } = useAuth();
   const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState('USD');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
@@ -31,6 +33,7 @@ export const GroupExpenseModal = ({
   useEffect(() => {
     if (isOpen) {
       setAmount('');
+      setCurrency(groupCurrency || 'USD');
       setDescription('');
       if (categories.length > 0) setCategoryId(categories[0].id);
       setExpenseDate(new Date().toISOString().split('T')[0]);
@@ -129,6 +132,7 @@ export const GroupExpenseModal = ({
       await apiClient.post(`/groups/${groupId}/expenses`, {
         category_id: parseInt(categoryId, 10),
         amount: parsedAmount,
+        currency,
         description: description.trim(),
         split_type: splitType,
         expense_date: expenseDate,
@@ -204,30 +208,63 @@ export const GroupExpenseModal = ({
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px' }}>
-                Total Amount *
+                Total Amount & Currency *
               </label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  background: '#0f172a',
-                  border: '1px solid #334155',
-                  color: '#f8fafc',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  style={{
+                    width: '85px',
+                    background: '#0f172a',
+                    border: '1px solid #334155',
+                    color: '#38bdf8',
+                    fontWeight: 700,
+                    padding: '10px 6px',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="INR">INR</option>
+                  <option value="CAD">CAD</option>
+                  <option value="AUD">AUD</option>
+                  <option value="JPY">JPY</option>
+                  <option value="CHF">CHF</option>
+                  <option value="SGD">SGD</option>
+                  <option value="AED">AED</option>
+                </select>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  style={{
+                    flex: 1,
+                    boxSizing: 'border-box',
+                    background: '#0f172a',
+                    border: '1px solid #334155',
+                    color: '#f8fafc',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+              {currency !== groupCurrency && (
+                <span style={{ fontSize: '0.72rem', color: '#38bdf8', marginTop: '4px', display: 'block' }}>
+                  Auto-converted to group base currency ({groupCurrency})
+                </span>
+              )}
             </div>
 
             <div>

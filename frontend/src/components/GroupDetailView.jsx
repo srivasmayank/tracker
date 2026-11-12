@@ -120,6 +120,16 @@ export const GroupDetailView = ({ groupId, onBack, categories = [] }) => {
               }}>
                 {group.members.length} members
               </span>
+              <span style={{
+                background: '#064e3b',
+                color: '#34d399',
+                fontSize: '0.75rem',
+                padding: '2px 8px',
+                borderRadius: '6px',
+                fontWeight: 600
+              }}>
+                Base: {group.currency || 'USD'}
+              </span>
             </div>
             {group.description && (
               <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>
@@ -412,7 +422,12 @@ export const GroupDetailView = ({ groupId, onBack, categories = [] }) => {
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#f8fafc' }}>
-                      ${parseFloat(exp.amount).toFixed(2)}
+                      <div>{exp.currency || 'USD'} {parseFloat(exp.amount).toFixed(2)}</div>
+                      {exp.currency && exp.currency !== (group.currency || 'USD') && exp.base_amount && (
+                        <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 500 }}>
+                          ≈ {group.currency || 'USD'} {parseFloat(exp.base_amount).toFixed(2)}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
@@ -428,7 +443,7 @@ export const GroupDetailView = ({ groupId, onBack, categories = [] }) => {
                               color: '#94a3b8'
                             }}
                           >
-                            {s.user?.full_name?.split(' ')[0]}: ${parseFloat(s.owed_amount).toFixed(2)}
+                            {s.user?.full_name?.split(' ')[0]}: {exp.currency || 'USD'} {parseFloat(s.owed_amount).toFixed(2)}
                           </span>
                         ))}
                       </div>
@@ -492,6 +507,7 @@ export const GroupDetailView = ({ groupId, onBack, categories = [] }) => {
         isOpen={isExpenseModalOpen}
         onClose={() => setIsExpenseModalOpen(false)}
         groupId={groupId}
+        groupCurrency={group.currency || 'USD'}
         members={group.members}
         categories={categories}
         onSaved={fetchGroupData}
@@ -501,6 +517,7 @@ export const GroupDetailView = ({ groupId, onBack, categories = [] }) => {
         isOpen={isSettleModalOpen}
         onClose={() => setIsSettleModalOpen(false)}
         groupId={groupId}
+        groupCurrency={group.currency || 'USD'}
         members={group.members}
         initialPayeeId={settlePreFill.payeeId}
         initialAmount={settlePreFill.amount}

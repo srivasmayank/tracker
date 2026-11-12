@@ -5,6 +5,7 @@ import { X, Users, Plus, Trash2 } from 'lucide-react';
 export const CreateGroupModal = ({ isOpen, onClose, onCreated }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [currency, setCurrency] = useState('USD');
   const [memberEmail, setMemberEmail] = useState('');
   const [memberEmails, setMemberEmails] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,10 +39,12 @@ export const CreateGroupModal = ({ isOpen, onClose, onCreated }) => {
       await apiClient.post('/groups', {
         name: name.trim(),
         description: description.trim() || null,
+        currency,
         member_emails: memberEmails
       });
       setName('');
       setDescription('');
+      setCurrency('USD');
       setMemberEmails([]);
       onCreated();
       onClose();
@@ -151,6 +154,41 @@ export const CreateGroupModal = ({ isOpen, onClose, onCreated }) => {
                 outline: 'none'
               }}
             />
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px' }}>
+              Base Accounting Currency *
+            </label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                background: '#0f172a',
+                border: '1px solid #334155',
+                color: '#f8fafc',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                fontSize: '0.95rem',
+                outline: 'none'
+              }}
+            >
+              <option value="USD">USD ($) - United States Dollar</option>
+              <option value="EUR">EUR (€) - Euro</option>
+              <option value="GBP">GBP (£) - British Pound</option>
+              <option value="INR">INR (₹) - Indian Rupee</option>
+              <option value="CAD">CAD (C$) - Canadian Dollar</option>
+              <option value="AUD">AUD (A$) - Australian Dollar</option>
+              <option value="JPY">JPY (¥) - Japanese Yen</option>
+              <option value="CHF">CHF - Swiss Franc</option>
+              <option value="SGD">SGD (S$) - Singapore Dollar</option>
+              <option value="AED">AED - UAE Dirham</option>
+            </select>
+            <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>
+              Shared expenses in other currencies will be converted to this base currency for debt simplification.
+            </span>
           </div>
 
           <div style={{ marginBottom: '1.25rem' }}>

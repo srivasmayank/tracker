@@ -40,14 +40,14 @@ export const Navbar = ({ currentTab, onTabChange }) => {
             <span style={{
               fontSize: '0.65rem',
               marginLeft: '8px',
-              background: '#065f46',
-              color: '#6ee7b7',
+              background: '#047857',
+              color: '#a7f3d0',
               padding: '2px 6px',
               borderRadius: '4px',
               textTransform: 'uppercase',
               fontWeight: '600'
             }}>
-              Phase 5: Background Jobs
+              Phase 6: Multi-Currency & FX
             </span>
           </div>
         </div>
