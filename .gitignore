@@ -55,9 +55,11 @@ test_expenses.db
 .env
 *.env
 backend/.env
+phase*/.env
 # Keep template file tracked
 !.env.example
 !backend/.env.example
+!phase*/.env.example
 
 # ==========================================
 # Node / Frontend (React & Vite)
